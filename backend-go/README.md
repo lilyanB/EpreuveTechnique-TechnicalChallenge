@@ -14,6 +14,10 @@ mongodb+srv://lilyan:<password>@cluster0.5ylyqo7.mongodb.net/?retryWrites=true&w
 go run main.go
 ```
 
+# Presentation
+
+https://github.com/lilyanB/projet/assets/91454320/e6539997-4ce0-43ec-8a2e-8b754fc57ce5
+
 # License
 
 This project is licensed under the MIT License.
