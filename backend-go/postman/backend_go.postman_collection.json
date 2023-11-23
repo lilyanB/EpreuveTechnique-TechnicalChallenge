@@ -1,0 +1,336 @@
+{
+	"info": {
+		"_postman_id": "00c2bac5-45f7-45cb-b6c2-79b1a3ba08de",
+		"name": "backend_go",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18565189"
+	},
+	"item": [
+		{
+			"name": "GetAll",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/v1/user/getall",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"getall"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetByName",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/v1/user/get/:name",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"get",
+						":name"
+					],
+					"variable": [
+						{
+							"key": "name",
+							"value": "John Doe"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetById",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/v1/user/getById/:id",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"getById",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "655f17909043260440c6615c"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetTransactions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/v1/user/getTransactions/:id",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"getTransactions",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "655f13e69e8ed966de50ce84"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetAccounts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/v1/user/getAccounts/:id",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"getAccounts",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "655f13e69e8ed966de50ce84"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"John Doe\",\r\n  \"age\": 25,\r\n  \"account\": [\r\n    {\"name\": \"courant\", \"amount\": 1000},\r\n    {\"name\": \"livret A\", \"amount\": 500}\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/v1/user/create",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"_id\": \"655f17909043260440c6615c\",\r\n  \"name\": \"John Doe\",\r\n  \"account\": [\r\n    {\"name\": \"courant\", \"amount\": 1000},\r\n    {\"name\": \"Livret A\", \"amount\": 500}\r\n  ],\r\n  \"Overdraft\": 10\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/v1/user/update",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SetOverdraft",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\":\"655f2ab136ca61acdead5e39\",\r\n    \"overdraft\": 490\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/v1/user/setOverdraft",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"setOverdraft"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Deposit",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": \"655f2ab136ca61acdead5e39\",\r\n  \"to\": \"courant\",\r\n  \"amount\": 10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/v1/user/deposit",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"deposit"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Withdraw",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": \"655f2ab136ca61acdead5e39\",\r\n  \"to\": \"courant\",\r\n  \"amount\": 500\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/v1/user/withdraw",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"withdraw"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transfer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": \"655f2ab136ca61acdead5e39\",\r\n  \"from\": \"courant\",\r\n  \"to\": \"livret A\",\r\n  \"amount\": 500\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/v1/user/transfer",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"transfer"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"John Doe\",\r\n  \"age\": 25,\r\n  \"account\": [\r\n    {\"name\": \"courant\", \"amount\": 1000},\r\n    {\"name\": \"livret A\", \"amount\": 500}\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/v1/user/delete/:id",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"v1",
+						"user",
+						"delete",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "655f13e69e8ed966de50ce84"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
