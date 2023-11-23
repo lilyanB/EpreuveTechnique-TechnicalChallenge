@@ -127,10 +127,23 @@ contract OnlineBank is Pausable {
     }
 
     function getAccountBalance(
+        address _user,
         AccountType accountType
     ) external view returns (uint256) {
-        User storage user = users[msg.sender];
+        User storage user = users[_user];
         return user.accounts[accountType].amount;
+    }
+
+    function getAllAccounts(
+        address _user
+    ) external view returns (AccountType[] memory) {
+        User storage user = users[_user];
+        AccountType[] memory accounts = new AccountType[](2);
+
+        accounts[0] = user.accounts[AccountType.COURANT].name;
+        accounts[1] = user.accounts[AccountType.LIVRETA].name;
+
+        return accounts;
     }
 
     function accountTypeToString(

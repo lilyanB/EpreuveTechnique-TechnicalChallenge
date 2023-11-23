@@ -1,0 +1,3 @@
+export const onlineBankAddress = "0xcAf72A56A63C4Db116a0Dc66a96CcEEfB8BB1c44"
+export const myERC20Address = "0x598978d58f09538378297F383907628dff05E98a"
+export const addressNul = '0x0000000000000000000000000000000000000000'

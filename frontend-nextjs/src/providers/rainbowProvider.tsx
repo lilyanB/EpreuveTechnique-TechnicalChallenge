@@ -10,14 +10,16 @@ import {
   lightTheme,
 } from '@rainbow-me/rainbowkit'
 import { configureChains, createConfig, WagmiConfig } from 'wagmi'
-import { publicProvider } from 'wagmi/providers/public'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { sepolia } from 'viem/chains'
+import { alchemyProvider } from '@wagmi/core/providers/alchemy'
+
+const API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [sepolia],
-  [publicProvider()]
+  [alchemyProvider({ apiKey: API_KEY! })]
 )
 
 const projectId = '4553aed4455ed3718b9271d2c9519377'

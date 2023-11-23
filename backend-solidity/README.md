@@ -12,8 +12,10 @@ npx hardhat test --network localhost
 # deploy
 
 ```shell
-npx hardhat run scripts/deploy.ts
+npx hardhat run scripts/0_deploy.ts
 ```
+
+# Contract address
 
 # License
 
