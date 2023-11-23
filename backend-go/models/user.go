@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Account struct {
 	Name   string `json:"name" bson:"name"`
@@ -8,11 +12,13 @@ type Account struct {
 }
 
 type User struct {
-	Name         string        `json:"name" bson:"name"`
-	Age          int           `json:"age" bson:"age"`
-	Account      []Account     `json:"account" bson:"account"`
-	Transactions []Transaction `json:"transactions" bson:"transactions"`
-	Overdraft    int           `json:"overdraft" bson:"overdraft"`
+	ID           primitive.ObjectID `json:"_id" bson:"_id"`
+	CreationDate time.Time          `json:"creationDate" bson:"creationDate"`
+	Name         string             `json:"name" bson:"name"`
+	Age          int                `json:"age" bson:"age"`
+	Account      []Account          `json:"account" bson:"account"`
+	Transactions []Transaction      `json:"transactions" bson:"transactions"`
+	Overdraft    int                `json:"overdraft" bson:"overdraft"`
 }
 
 type Transaction struct {

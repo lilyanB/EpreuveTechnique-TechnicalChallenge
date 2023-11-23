@@ -51,15 +51,40 @@ func (u *UserServiceImpl) updateTransaction(user *models.User, transactionType s
 }
 
 func (u *UserServiceImpl) CreateUser(user *models.User) error {
+	user.ID = primitive.NewObjectID()
+	user.CreationDate = time.Now()
 	_, err := u.usercollection.InsertOne(u.ctx, user)
 	return err
 }
 
-func (u *UserServiceImpl) GetUser(name *string) (*models.User, error) {
-	var user *models.User
+func (u *UserServiceImpl) GetUser(name *string) ([]*models.User, error) {
+	var users []*models.User
+
 	query := bson.D{bson.E{Key: "name", Value: name}}
-	err := u.usercollection.FindOne(u.ctx, query).Decode(&user)
-	return user, err
+	cursor, err := u.usercollection.Find(u.ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(u.ctx)
+
+	for cursor.Next(u.ctx) {
+		var user models.User
+		err := cursor.Decode(&user)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		return nil, errors.New("no users found with the given name")
+	}
+
+	return users, nil
 }
 
 func (u *UserServiceImpl) GetUserByID(userID primitive.ObjectID) (*models.User, error) {
@@ -103,6 +128,13 @@ func (u *UserServiceImpl) GetAll() ([]*models.User, error) {
 	return users, nil
 }
 
+func (u *UserServiceImpl) GetAccounts(userID primitive.ObjectID) ([]models.Account, error) {
+	var user *models.User
+	query := bson.D{bson.E{Key: "_id", Value: userID}}
+	err := u.usercollection.FindOne(u.ctx, query).Decode(&user)
+	return user.Account, err
+}
+
 func (u *UserServiceImpl) UpdateUser(user *models.User) error {
 	filter := bson.D{primitive.E{Key: "name", Value: user.Name}}
 	update := bson.D{primitive.E{Key: "$set", Value: bson.D{primitive.E{Key: "name", Value: user.Name}, primitive.E{Key: "age", Value: user.Age}, primitive.E{Key: "account", Value: user.Account}, primitive.E{Key: "overdraft", Value: user.Overdraft}}}}
@@ -113,8 +145,8 @@ func (u *UserServiceImpl) UpdateUser(user *models.User) error {
 	return nil
 }
 
-func (u *UserServiceImpl) DeleteUser(name *string) error {
-	filter := bson.D{primitive.E{Key: "name", Value: name}}
+func (u *UserServiceImpl) DeleteUser(userID primitive.ObjectID) error {
+	filter := bson.D{bson.E{Key: "_id", Value: userID}}
 	result, _ := u.usercollection.DeleteOne(u.ctx, filter)
 	if result.DeletedCount != 1 {
 		return errors.New("no matched document found for delete")

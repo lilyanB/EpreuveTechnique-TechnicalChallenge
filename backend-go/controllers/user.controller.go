@@ -85,6 +85,22 @@ func (uc *UserController) GetAll(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, users)
 }
 
+func (uc *UserController) GetAccounts(ctx *gin.Context) {
+	userID := ctx.Param("id")
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user ID"})
+		return
+	}
+	user, err := uc.UserService.GetAccounts(objectID)
+	if err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, user)
+}
+
 func (uc *UserController) UpdateUser(ctx *gin.Context) {
 	var user models.User
 	if err := ctx.ShouldBindJSON(&user); err != nil {
@@ -100,12 +116,18 @@ func (uc *UserController) UpdateUser(ctx *gin.Context) {
 }
 
 func (uc *UserController) DeleteUser(ctx *gin.Context) {
-	var username string = ctx.Param("name")
-	err := uc.UserService.DeleteUser(&username)
+	userID := ctx.Param("id")
+	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user ID"})
 		return
 	}
+	deleteErr := uc.UserService.DeleteUser(objectID)
+	if deleteErr != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": deleteErr.Error()})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
@@ -161,8 +183,9 @@ func (uc *UserController) RegisterUserRoutes(rg *gin.RouterGroup) {
 	userroute.GET("/getById/:id", uc.GetUserByID)
 	userroute.GET("/getTransactions/:id", uc.GetTransactions)
 	userroute.GET("/getall", uc.GetAll)
+	userroute.GET("/getAccounts/:id", uc.GetAccounts)
 	userroute.PATCH("/update", uc.UpdateUser)
-	userroute.DELETE("/delete/:name", uc.DeleteUser)
+	userroute.DELETE("/delete/:id", uc.DeleteUser)
 	userroute.POST("/transfer", uc.TransferAmount)
 	userroute.POST("/deposit", uc.DepositAmount)
 	userroute.POST("/withdraw", uc.WithdrawAmount)
