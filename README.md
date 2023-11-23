@@ -28,4 +28,4 @@ celle-ci est refusée.
 
 # Repo
 
-Chaque dossier à un readme avec les informations nécessaire.
+Chaque dossier à un readme avec les informations nécessaires.
