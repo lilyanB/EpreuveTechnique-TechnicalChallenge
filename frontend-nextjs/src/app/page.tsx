@@ -14,6 +14,18 @@ export default function Home() {
 
   useEffect(() => {
     if (isConnected) {
+      const fetchAccountBalance = async () => {
+        try {
+          const accountsBalances = await fetchAccounts(address)
+          let balances = []
+          for (const key in accountsBalances) {
+            balances.push(Number(accountsBalances[key]))
+          }
+          setAccounts(balances)
+        } catch (error) {
+          console.error('Error fetching items:', error)
+        }
+      }
       fetchAccountBalance()
     }
   }, [isConnected])
@@ -32,15 +44,6 @@ export default function Home() {
       ...onlineBankContract,
     }
   )
-
-  const fetchAccountBalance = async () => {
-    try {
-      const accountsBalances = await fetchAccounts(address)
-      setAccounts(accountsBalances)
-    } catch (error) {
-      console.error('Error fetching items:', error)
-    }
-  }
 
   const handleDepositClick = async (accountType: string) => {
     const value = accountType === 'COURANT' ? courantValue : livretAValue
@@ -88,9 +91,9 @@ export default function Home() {
     <main className="flex flex-col items-center h-screen space-y-6">
       <div className="flex flex-col h-11/12 w-11/12 border-solid border-2">
         <h1>Accounts</h1>
-        {accounts.length > 1 && (
+        {accounts.length >= 1 && (
           <>
-            <div>Courant {accounts[0].toString()} EUR</div>
+            <div>Courant {accounts[0]} EUR</div>
             <Input
               type="number"
               placeholder="Enter EUR"
@@ -109,7 +112,7 @@ export default function Home() {
             >
               withdraw from Courant
             </Button>
-            <div>Liret A {accounts[1].toString()} EUR</div>
+            <div>Liret A {accounts[1]} EUR</div>
             <Input
               type="number"
               placeholder="Enter EUR"
