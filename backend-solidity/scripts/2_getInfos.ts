@@ -21,13 +21,11 @@ async function main() {
   const currency = await ethers.getContractAt("MyERC20", myERC20Address)
   console.log(`deployed euroNumerique at ${currency.target}`);
 
-  const balance = await onlineBank.getAccountBalance(AccountType.COURANT);
+  const balance = await onlineBank.getAccountBalance(deployer, AccountType.COURANT);
   console.log(balance)
 
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main()
   .then(() => process.exit(0))
   .catch((error) => {

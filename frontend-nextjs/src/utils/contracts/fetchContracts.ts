@@ -1,7 +1,7 @@
 import { readContracts } from '@wagmi/core'
 import { onlineBankContract } from '@/utils/contracts/setupContracts'
 
-enum AccountType {
+export enum AccountType {
   COURANT,
   LIVRETA,
 }

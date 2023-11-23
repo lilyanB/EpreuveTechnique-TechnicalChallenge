@@ -31,7 +31,7 @@ describe('OnlineBank', function () {
         const { currency, onlineBank } = await loadFixture(deployOneYearLockFixture)
         await currency.approve(onlineBank.target, 100)
         await onlineBank.deposit(AccountType.COURANT, 100);
-        const balance = await onlineBank.getAccountBalance(AccountType.COURANT);
+        const balance = await onlineBank.getAccountBalance(owner, AccountType.COURANT);
         expect(balance).to.equal(100);
     });
 
@@ -40,7 +40,7 @@ describe('OnlineBank', function () {
         await currency.approve(onlineBank.target, 100)
         await onlineBank.deposit(AccountType.COURANT, 100);
         await onlineBank.withdraw(AccountType.COURANT, 50);
-        const balance = await onlineBank.getAccountBalance(AccountType.COURANT);
+        const balance = await onlineBank.getAccountBalance(owner, AccountType.COURANT);
         expect(balance).to.equal(50);
     });
 
@@ -50,8 +50,8 @@ describe('OnlineBank', function () {
         await onlineBank.deposit(AccountType.COURANT, 100);
         await onlineBank.withdraw(AccountType.COURANT, 50);
         await onlineBank.transfer(AccountType.COURANT, AccountType.LIVRETA, 30);
-        const balanceCOURANT = await onlineBank.getAccountBalance(AccountType.COURANT);
-        const balanceLIVRETA = await onlineBank.getAccountBalance(AccountType.LIVRETA);
+        const balanceCOURANT = await onlineBank.getAccountBalance(owner, AccountType.COURANT);
+        const balanceLIVRETA = await onlineBank.getAccountBalance(owner, AccountType.LIVRETA);
         expect(balanceCOURANT).to.equal(20);
         expect(balanceLIVRETA).to.equal(30);
     });
@@ -69,7 +69,7 @@ describe('OnlineBank', function () {
         await expect(onlineBank.transfer(AccountType.COURANT, AccountType.LIVRETA, 30)).to.be.reverted;
         await onlineBank.unpause();
         await onlineBank.withdraw(AccountType.COURANT, 20);
-        const balanceCOURANT = await onlineBank.getAccountBalance(AccountType.COURANT);
+        const balanceCOURANT = await onlineBank.getAccountBalance(owner, AccountType.COURANT);
         expect(balanceCOURANT).to.equal(30);
     });
 });

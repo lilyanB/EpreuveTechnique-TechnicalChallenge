@@ -24,14 +24,14 @@ async function main() {
 
   const mybalance = await currency.balanceOf(deployer)
   console.log(mybalance)
-  const approve0 = await currency.approve(onlineBank.target, 10)
+  const approve0 = await currency.approve(onlineBank.target, 10000)
   await approve0.wait();
   console.log("approve")
-  const deposit0 = await onlineBank.deposit(AccountType.COURANT, 10);
-  await deposit0.wait();
-  console.log("deposit")
-  const balance = await onlineBank.getAccountBalance(deployer, AccountType.COURANT);
-  console.log(balance)
+  // const deposit0 = await onlineBank.deposit(AccountType.COURANT, 10);
+  // await deposit0.wait();
+  // console.log("deposit")
+  // const balance = await onlineBank.getAccountBalance(deployer, AccountType.COURANT);
+  // console.log(balance)
 
 }
 
