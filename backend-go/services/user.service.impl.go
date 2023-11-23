@@ -136,12 +136,24 @@ func (u *UserServiceImpl) GetAccounts(userID primitive.ObjectID) ([]models.Accou
 }
 
 func (u *UserServiceImpl) UpdateUser(user *models.User) error {
-	filter := bson.D{primitive.E{Key: "name", Value: user.Name}}
+	filter := bson.D{primitive.E{Key: "_id", Value: user.ID}}
 	update := bson.D{primitive.E{Key: "$set", Value: bson.D{primitive.E{Key: "name", Value: user.Name}, primitive.E{Key: "age", Value: user.Age}, primitive.E{Key: "account", Value: user.Account}, primitive.E{Key: "overdraft", Value: user.Overdraft}}}}
 	result, _ := u.usercollection.UpdateOne(u.ctx, filter, update)
 	if result.MatchedCount != 1 {
 		return errors.New("no matched document found for update")
 	}
+	return nil
+}
+
+func (u *UserServiceImpl) SetOverdraft(objectID primitive.ObjectID, overdraft *int) error {
+	filter := bson.D{bson.E{Key: "_id", Value: objectID}}
+	update := bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "overdraft", Value: overdraft}}}}
+
+	result, _ := u.usercollection.UpdateOne(u.ctx, filter, update)
+	if result.MatchedCount != 1 {
+		return errors.New("no matched document found for update")
+	}
+
 	return nil
 }
 

@@ -15,6 +15,7 @@ type UserService interface {
 	GetAll() ([]*models.User, error)
 	GetAccounts(primitive.ObjectID) ([]models.Account, error)
 	UpdateUser(*models.User) error
+	SetOverdraft(primitive.ObjectID, *int) error
 	DeleteUser(primitive.ObjectID) error
 	TransferAmount(*string, *string, *int, primitive.ObjectID) error
 	DepositAmount(primitive.ObjectID, *string, *int) error

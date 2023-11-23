@@ -2,6 +2,11 @@ package types
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
+type SetOverdraftRequest struct {
+	ID        primitive.ObjectID `json:"id"`
+	Overdraft int                `json:"overdraft"`
+}
+
 type TransferRequest struct {
 	ID     primitive.ObjectID `json:"id"`
 	From   string             `json:"from"`
