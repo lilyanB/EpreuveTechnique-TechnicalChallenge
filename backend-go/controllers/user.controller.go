@@ -20,18 +20,13 @@ func New(userservice services.UserService) UserController {
 	}
 }
 
-func (uc *UserController) CreateUser(ctx *gin.Context) {
-	var user models.User
-	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-	err := uc.UserService.CreateUser(&user)
+func (uc *UserController) GetAll(ctx *gin.Context) {
+	users, err := uc.UserService.GetAll()
 	if err != nil {
 		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "creation success"})
+	ctx.JSON(http.StatusOK, users)
 }
 
 func (uc *UserController) GetUser(ctx *gin.Context) {
@@ -74,15 +69,6 @@ func (uc *UserController) GetTransactions(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, user)
 }
 
-func (uc *UserController) GetAll(ctx *gin.Context) {
-	users, err := uc.UserService.GetAll()
-	if err != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
-		return
-	}
-	ctx.JSON(http.StatusOK, users)
-}
-
 func (uc *UserController) GetAccounts(ctx *gin.Context) {
 	objectID, err := utils.GetObjectIDFromParam(ctx, "id")
 	if err != nil {
@@ -96,6 +82,20 @@ func (uc *UserController) GetAccounts(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, user)
+}
+
+func (uc *UserController) CreateUser(ctx *gin.Context) {
+	var user models.User
+	if err := ctx.ShouldBindJSON(&user); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	err := uc.UserService.CreateUser(&user)
+	if err != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"message": "creation success"})
 }
 
 func (uc *UserController) UpdateUser(ctx *gin.Context) {
@@ -124,36 +124,6 @@ func (uc *UserController) SetOverdraft(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "update of overdraft, success"})
-}
-
-func (uc *UserController) DeleteUser(ctx *gin.Context) {
-	objectID, err := utils.GetObjectIDFromParam(ctx, "id")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user ID"})
-		return
-	}
-	deleteErr := uc.UserService.DeleteUser(objectID)
-	if deleteErr != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"message": deleteErr.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "delete success"})
-}
-
-func (uc *UserController) TransferAmount(ctx *gin.Context) {
-	var transferRequest types.TransferRequest
-	if err := ctx.ShouldBindJSON(&transferRequest); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON payload"})
-		return
-	}
-	errTransfer := uc.UserService.TransferAmount(&transferRequest.From, &transferRequest.To, &transferRequest.Amount, transferRequest.ID)
-	if errTransfer != nil {
-		ctx.JSON(http.StatusBadGateway, gin.H{"message": errTransfer.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "transfer success"})
 }
 
 func (uc *UserController) DepositAmount(ctx *gin.Context) {
@@ -186,18 +156,48 @@ func (uc *UserController) WithdrawAmount(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"message": "withdraw success"})
 }
 
+func (uc *UserController) TransferAmount(ctx *gin.Context) {
+	var transferRequest types.TransferRequest
+	if err := ctx.ShouldBindJSON(&transferRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid JSON payload"})
+		return
+	}
+	errTransfer := uc.UserService.TransferAmount(&transferRequest.From, &transferRequest.To, &transferRequest.Amount, transferRequest.ID)
+	if errTransfer != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": errTransfer.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "transfer success"})
+}
+
+func (uc *UserController) DeleteUser(ctx *gin.Context) {
+	objectID, err := utils.GetObjectIDFromParam(ctx, "id")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user ID"})
+		return
+	}
+	deleteErr := uc.UserService.DeleteUser(objectID)
+	if deleteErr != nil {
+		ctx.JSON(http.StatusBadGateway, gin.H{"message": deleteErr.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "delete success"})
+}
+
 func (uc *UserController) RegisterUserRoutes(rg *gin.RouterGroup) {
 	userroute := rg.Group("/user")
-	userroute.POST("/create", uc.CreateUser)
 	userroute.GET("/getall", uc.GetAll)
 	userroute.GET("/get/:name", uc.GetUser)
 	userroute.GET("/getById/:id", uc.GetUserByID)
 	userroute.GET("/getTransactions/:id", uc.GetTransactions)
 	userroute.GET("/getAccounts/:id", uc.GetAccounts)
+	userroute.POST("/create", uc.CreateUser)
 	userroute.PATCH("/update", uc.UpdateUser)
 	userroute.POST("/setOverdraft", uc.SetOverdraft)
-	userroute.DELETE("/delete/:id", uc.DeleteUser)
-	userroute.POST("/transfer", uc.TransferAmount)
 	userroute.POST("/deposit", uc.DepositAmount)
 	userroute.POST("/withdraw", uc.WithdrawAmount)
+	userroute.POST("/transfer", uc.TransferAmount)
+	userroute.DELETE("/delete/:id", uc.DeleteUser)
 }

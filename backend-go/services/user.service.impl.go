@@ -24,6 +24,7 @@ func NewUserService(usercollection *mongo.Collection, ctx context.Context) UserS
 	}
 }
 
+// updateTransaction appends a new transaction to the user's transaction history and updates the user document.
 func (u *UserServiceImpl) updateTransaction(user *models.User, transactionType string, amount int, from string, to string, newBalance int, informations string) {
 	transaction := models.Transaction{
 		Type:         transactionType,
@@ -50,13 +51,35 @@ func (u *UserServiceImpl) updateTransaction(user *models.User, transactionType s
 	}
 }
 
-func (u *UserServiceImpl) CreateUser(user *models.User) error {
-	user.ID = primitive.NewObjectID()
-	user.CreationDate = time.Now()
-	_, err := u.usercollection.InsertOne(u.ctx, user)
-	return err
+// GetAll retrieves all users from the database.
+func (u *UserServiceImpl) GetAll() ([]*models.User, error) {
+	var users []*models.User
+	cursor, err := u.usercollection.Find(u.ctx, bson.D{{}})
+	if err != nil {
+		return nil, err
+	}
+	for cursor.Next(u.ctx) {
+		var user models.User
+		err := cursor.Decode(&user)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	cursor.Close(u.ctx)
+
+	if len(users) == 0 {
+		return nil, errors.New("documents not found")
+	}
+	return users, nil
 }
 
+// GetUser retrieves users by name from the database.
 func (u *UserServiceImpl) GetUser(name *string) ([]*models.User, error) {
 	var users []*models.User
 
@@ -87,6 +110,7 @@ func (u *UserServiceImpl) GetUser(name *string) ([]*models.User, error) {
 	return users, nil
 }
 
+// GetUserByID retrieves a user by ID from the database.
 func (u *UserServiceImpl) GetUserByID(userID primitive.ObjectID) (*models.User, error) {
 	var user *models.User
 	query := bson.D{bson.E{Key: "_id", Value: userID}}
@@ -94,6 +118,7 @@ func (u *UserServiceImpl) GetUserByID(userID primitive.ObjectID) (*models.User, 
 	return user, err
 }
 
+// GetTransactions retrieves a user's transactions by ID from the database.
 func (u *UserServiceImpl) GetTransactions(userID primitive.ObjectID) ([]models.Transaction, error) {
 	var user *models.User
 	query := bson.D{bson.E{Key: "_id", Value: userID}}
@@ -101,33 +126,7 @@ func (u *UserServiceImpl) GetTransactions(userID primitive.ObjectID) ([]models.T
 	return user.Transactions, err
 }
 
-func (u *UserServiceImpl) GetAll() ([]*models.User, error) {
-	var users []*models.User
-	cursor, err := u.usercollection.Find(u.ctx, bson.D{{}})
-	if err != nil {
-		return nil, err
-	}
-	for cursor.Next(u.ctx) {
-		var user models.User
-		err := cursor.Decode(&user)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, &user)
-	}
-
-	if err := cursor.Err(); err != nil {
-		return nil, err
-	}
-
-	cursor.Close(u.ctx)
-
-	if len(users) == 0 {
-		return nil, errors.New("documents not found")
-	}
-	return users, nil
-}
-
+// GetAccounts retrieves a user's accounts by ID from the database.
 func (u *UserServiceImpl) GetAccounts(userID primitive.ObjectID) ([]models.Account, error) {
 	var user *models.User
 	query := bson.D{bson.E{Key: "_id", Value: userID}}
@@ -135,6 +134,15 @@ func (u *UserServiceImpl) GetAccounts(userID primitive.ObjectID) ([]models.Accou
 	return user.Account, err
 }
 
+// CreateUser inserts a new user into the database.
+func (u *UserServiceImpl) CreateUser(user *models.User) error {
+	user.ID = primitive.NewObjectID()
+	user.CreationDate = time.Now()
+	_, err := u.usercollection.InsertOne(u.ctx, user)
+	return err
+}
+
+// UpdateUser updates all user's information in the database.
 func (u *UserServiceImpl) UpdateUser(user *models.User) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: user.ID}}
 	update := bson.D{primitive.E{Key: "$set", Value: bson.D{primitive.E{Key: "name", Value: user.Name}, primitive.E{Key: "age", Value: user.Age}, primitive.E{Key: "account", Value: user.Account}, primitive.E{Key: "overdraft", Value: user.Overdraft}}}}
@@ -145,6 +153,7 @@ func (u *UserServiceImpl) UpdateUser(user *models.User) error {
 	return nil
 }
 
+// SetOverdraft sets the overdraft limit for a user.
 func (u *UserServiceImpl) SetOverdraft(objectID primitive.ObjectID, overdraft *int) error {
 	filter := bson.D{bson.E{Key: "_id", Value: objectID}}
 	update := bson.D{bson.E{Key: "$set", Value: bson.D{bson.E{Key: "overdraft", Value: overdraft}}}}
@@ -157,15 +166,87 @@ func (u *UserServiceImpl) SetOverdraft(objectID primitive.ObjectID, overdraft *i
 	return nil
 }
 
-func (u *UserServiceImpl) DeleteUser(userID primitive.ObjectID) error {
-	filter := bson.D{bson.E{Key: "_id", Value: userID}}
-	result, _ := u.usercollection.DeleteOne(u.ctx, filter)
-	if result.DeletedCount != 1 {
-		return errors.New("no matched document found for delete")
+// DepositAmount deposits an amount into a specific user's account.
+func (u *UserServiceImpl) DepositAmount(objectID primitive.ObjectID, accountName *string, amount *int) error {
+	filter := bson.D{{Key: "_id", Value: objectID}}
+	var user models.User
+	err := u.usercollection.FindOne(u.ctx, filter).Decode(&user)
+	if err != nil {
+		return errors.New("User not found")
 	}
+
+	var targetAccount *models.Account
+	for i := range user.Account {
+		if user.Account[i].Name == *accountName {
+			targetAccount = &user.Account[i]
+			break
+		}
+	}
+
+	if targetAccount == nil {
+		return errors.New("Invalid account name")
+	}
+
+	targetAccount.Amount += *amount
+
+	updateFilter := bson.D{{Key: "_id", Value: objectID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "account", Value: user.Account}}}}
+
+	_, err = u.usercollection.UpdateOne(u.ctx, updateFilter, update)
+	if err != nil {
+		return errors.New("Deposit failed")
+	}
+	u.updateTransaction(&user, "Deposit", *amount, "External", targetAccount.Name, targetAccount.Amount, fmt.Sprintf("Deposit %d from %s to %s", *amount, "External", targetAccount.Name))
+
 	return nil
 }
 
+// WithdrawAmount withdraws an amount from a specific user's account.
+func (u *UserServiceImpl) WithdrawAmount(objectID primitive.ObjectID, accountName *string, amount *int) error {
+	filter := bson.D{{Key: "_id", Value: objectID}}
+	var user models.User
+	err := u.usercollection.FindOne(u.ctx, filter).Decode(&user)
+	if err != nil {
+		return errors.New("User not found")
+	}
+
+	var targetAccount *models.Account
+	for i := range user.Account {
+		if user.Account[i].Name == *accountName {
+			targetAccount = &user.Account[i]
+			break
+		}
+	}
+
+	if targetAccount == nil {
+		return errors.New("Invalid account name")
+	}
+
+	if targetAccount.Amount < *amount {
+		if targetAccount.Name == "courant" {
+			if targetAccount.Amount-*amount < 0-user.Overdraft {
+				return errors.New("Exceeded overdraft")
+			}
+		} else {
+			return errors.New("Insufficient funds")
+		}
+	}
+
+	targetAccount.Amount -= *amount
+
+	updateFilter := bson.D{{Key: "_id", Value: objectID}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "account", Value: user.Account}}}}
+
+	_, err = u.usercollection.UpdateOne(u.ctx, updateFilter, update)
+	if err != nil {
+		return errors.New("Deposit failed")
+	}
+	u.updateTransaction(&user, "Withdraw", *amount, targetAccount.Name, "External", targetAccount.Amount, fmt.Sprintf("Withdraw %d from %s to %s", *amount, targetAccount.Name, "External"))
+
+	return nil
+}
+
+// TransferAmount transfers an amount between two accounts of a specific user.
 func (u *UserServiceImpl) TransferAmount(from *string, to *string, amount *int, objectID primitive.ObjectID) error {
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	var user models.User
@@ -215,80 +296,12 @@ func (u *UserServiceImpl) TransferAmount(from *string, to *string, amount *int, 
 	return nil
 }
 
-func (u *UserServiceImpl) DepositAmount(objectID primitive.ObjectID, accountName *string, amount *int) error {
-	filter := bson.D{{Key: "_id", Value: objectID}}
-	var user models.User
-	err := u.usercollection.FindOne(u.ctx, filter).Decode(&user)
-	if err != nil {
-		return errors.New("User not found")
+// DeleteUser deletes a user from the database by ID.
+func (u *UserServiceImpl) DeleteUser(userID primitive.ObjectID) error {
+	filter := bson.D{bson.E{Key: "_id", Value: userID}}
+	result, _ := u.usercollection.DeleteOne(u.ctx, filter)
+	if result.DeletedCount != 1 {
+		return errors.New("no matched document found for delete")
 	}
-
-	var targetAccount *models.Account
-	for i := range user.Account {
-		if user.Account[i].Name == *accountName {
-			targetAccount = &user.Account[i]
-			break
-		}
-	}
-
-	if targetAccount == nil {
-		return errors.New("Invalid account name")
-	}
-
-	targetAccount.Amount += *amount
-
-	updateFilter := bson.D{{Key: "_id", Value: objectID}}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "account", Value: user.Account}}}}
-
-	_, err = u.usercollection.UpdateOne(u.ctx, updateFilter, update)
-	if err != nil {
-		return errors.New("Deposit failed")
-	}
-	u.updateTransaction(&user, "Deposit", *amount, "External", targetAccount.Name, targetAccount.Amount, fmt.Sprintf("Deposit %d from %s to %s", *amount, "External", targetAccount.Name))
-
-	return nil
-}
-
-func (u *UserServiceImpl) WithdrawAmount(objectID primitive.ObjectID, accountName *string, amount *int) error {
-	filter := bson.D{{Key: "_id", Value: objectID}}
-	var user models.User
-	err := u.usercollection.FindOne(u.ctx, filter).Decode(&user)
-	if err != nil {
-		return errors.New("User not found")
-	}
-
-	var targetAccount *models.Account
-	for i := range user.Account {
-		if user.Account[i].Name == *accountName {
-			targetAccount = &user.Account[i]
-			break
-		}
-	}
-
-	if targetAccount == nil {
-		return errors.New("Invalid account name")
-	}
-
-	if targetAccount.Amount < *amount {
-		if targetAccount.Name == "courant" {
-			if targetAccount.Amount-*amount < 0-user.Overdraft {
-				return errors.New("Exceeded overdraft")
-			}
-		} else {
-			return errors.New("Insufficient funds")
-		}
-	}
-
-	targetAccount.Amount -= *amount
-
-	updateFilter := bson.D{{Key: "_id", Value: objectID}}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "account", Value: user.Account}}}}
-
-	_, err = u.usercollection.UpdateOne(u.ctx, updateFilter, update)
-	if err != nil {
-		return errors.New("Deposit failed")
-	}
-	u.updateTransaction(&user, "Withdraw", *amount, targetAccount.Name, "External", targetAccount.Amount, fmt.Sprintf("Withdraw %d from %s to %s", *amount, targetAccount.Name, "External"))
-
 	return nil
 }
