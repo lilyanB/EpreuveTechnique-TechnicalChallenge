@@ -55,4 +55,21 @@ describe('OnlineBank', function () {
         expect(balanceCOURANT).to.equal(20);
         expect(balanceLIVRETA).to.equal(30);
     });
+
+    it('Should allow stop functions if contract pause', async function () {
+        const { currency, onlineBank } = await loadFixture(deployOneYearLockFixture)
+        await currency.approve(onlineBank.target, 100)
+        await onlineBank.deposit(AccountType.COURANT, 100);
+        await onlineBank.withdraw(AccountType.COURANT, 50);
+        const notPausedBefore = await onlineBank.paused();
+        expect(notPausedBefore).to.be.false;
+        await onlineBank.pause();
+        const pausedAfter = await onlineBank.paused();
+        expect(pausedAfter).to.be.true;
+        await expect(onlineBank.transfer(AccountType.COURANT, AccountType.LIVRETA, 30)).to.be.reverted;
+        await onlineBank.unpause();
+        await onlineBank.withdraw(AccountType.COURANT, 20);
+        const balanceCOURANT = await onlineBank.getAccountBalance(AccountType.COURANT);
+        expect(balanceCOURANT).to.equal(30);
+    });
 });

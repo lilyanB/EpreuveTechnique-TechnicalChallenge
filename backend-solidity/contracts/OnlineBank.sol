@@ -2,10 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
-contract OnlineBank {
+contract OnlineBank is Pausable {
     address public owner;
-    address public usdcToken;
+    address public euro;
 
     enum AccountType {
         COURANT,
@@ -21,11 +22,11 @@ contract OnlineBank {
         address owner;
         uint256 age;
         mapping(AccountType => Account) accounts;
-        int256 overdraft;
     }
 
     event Transaction(
         string _type,
+        address user,
         uint256 amount,
         uint256 date,
         string from,
@@ -41,14 +42,26 @@ contract OnlineBank {
         _;
     }
 
-    constructor(address _usdcToken) {
+    constructor(address _euro) {
         owner = msg.sender;
-        usdcToken = _usdcToken;
+        euro = _euro;
     }
 
-    function deposit(AccountType name, uint256 amount) external {
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+    function setOwner(address newOwner) public onlyOwner {
+        owner = newOwner;
+    }
+
+    function deposit(AccountType name, uint256 amount) external whenNotPaused {
         require(
-            IERC20(usdcToken).transferFrom(msg.sender, address(this), amount),
+            IERC20(euro).transferFrom(msg.sender, address(this), amount),
             "Failed to transfer ERC20 tokens"
         );
 
@@ -57,6 +70,7 @@ contract OnlineBank {
 
         emit Transaction(
             "Deposit",
+            msg.sender,
             amount,
             block.timestamp,
             "External",
@@ -66,19 +80,20 @@ contract OnlineBank {
         );
     }
 
-    function withdraw(AccountType name, uint256 amount) external {
+    function withdraw(AccountType name, uint256 amount) external whenNotPaused {
         User storage user = users[msg.sender];
         require(amount <= user.accounts[name].amount, "Insufficient funds");
 
         user.accounts[name].amount -= amount;
 
         require(
-            IERC20(usdcToken).transfer(msg.sender, amount),
+            IERC20(euro).transfer(msg.sender, amount),
             "Failed to transfer ERC20 tokens"
         );
 
         emit Transaction(
             "Withdrawal",
+            msg.sender,
             amount,
             block.timestamp,
             accountTypeToString(name),
@@ -92,7 +107,7 @@ contract OnlineBank {
         AccountType from,
         AccountType to,
         uint256 amount
-    ) external {
+    ) external whenNotPaused {
         User storage user = users[msg.sender];
         require(amount <= user.accounts[from].amount, "Insufficient funds");
 
@@ -101,6 +116,7 @@ contract OnlineBank {
 
         emit Transaction(
             "Transfer",
+            msg.sender,
             amount,
             block.timestamp,
             accountTypeToString(from),
